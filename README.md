@@ -6,7 +6,7 @@ This repository provides you with sample code on how to collect metrics of an ex
 
 ![Architectural diagram of the solution](assets/arch.png)
 
-* AWS Lambda triggered on every Iceberg snapshot creation to collect and send metrics to CloudWatch. This achieved by creating [S3 event notification](https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html). See [Setting up S3 event notification](#setting-up-s3-event-notification) section.
+* AWS Lambda triggered on every Iceberg snapshot creation to collect and send metrics to CloudWatch. This achieved by creating [S3 event notification](https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html). See [Setting up S3 event notification](#3-setting-up-s3-event-notification) section.
 * AWS Lambda code includes `pyiceberg` library and [AWS Glue interactive Sessions](https://docs.aws.amazon.com/glue/latest/dg/interactive-sessions-overview.html) with minimal compute to read `snapshots`, `partitions` and `files` Apache Iceberg metadata tables with Spark.
 * AWS Lambda code aggregates information retrieved from metadata tables to create metrics and submits those to AWS CloudWatch.
 
@@ -175,7 +175,7 @@ def render_json_template(template_path, data):
 
 # Data to fill in the template
 data = {
-    "CW_NAMESPACE": "<< REPLACE >>",
+    "CW_NAMESPACE": "<<REPLACE>>",
     "REGION": "<<REPLACE>>",
     "DBNAME": "<<REPLACE>>",
     "TABLENAME": "<<REPLACE>>"
