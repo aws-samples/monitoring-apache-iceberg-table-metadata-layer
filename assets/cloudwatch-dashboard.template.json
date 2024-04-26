@@ -10,7 +10,7 @@
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "{{ CW_NAMESPACE }}", "snapshot.total_data_files", "table_name", "{{ DBNAME }}.{{ TABLENAME }}", { "region": "{{ REGION} }}" } ],
+                    [ "{{CW_NAMESPACE}}", "snapshot.total_data_files", "table_name", "{{DBNAME}}.{{TABLENAME}}", { "region": "{{REGION}}" } ],
                     [ ".", "snapshot.total_delete_files", ".", "." ]
                 ],
                 "region": "{{ REGION }}",

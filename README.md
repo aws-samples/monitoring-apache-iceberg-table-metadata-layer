@@ -192,7 +192,16 @@ with open(output_path, 'w') as file:
 print(f"Your dashboard configuration successfully generated at {output_path}")
 ```
 
-TODO: include instructions to create dashboard from configuration
+Now follow steps to create CloudWatch dashboard from rendered json.
+
+1. Sign in to the AWS Management Console and navigate to the CloudWatch service.
+2. In the navigation pane, click on "Dashboards" on the left pane.
+3. Click on "Create Dashboard" and give it a name. 
+4. If widget configuration popup appears click "Cancel".
+5. Click the "Actions" dropdown menu in the top right corner of the dashboard and select "View/edit source".
+This will open a new tab with the source JSON for the dashboard. You can then paste rendered JSON into a Dashboard source to create a custom dashboard resource.
+6. Click "Update"
+7. The new dashboard supposedly empty. Once your AWS Lambda will generate metrics they will appear here.
 
 ### Test Locally
 
