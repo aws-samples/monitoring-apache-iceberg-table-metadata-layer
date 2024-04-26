@@ -229,6 +229,12 @@ https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/w
 Docker \
 https://docs.docker.com/get-docker/
 
+## Clean Up
+
+1. Delete AWS Lambda `sam delete`.
+2. Delete CloudWatch Dashboard.
+3. Remove S3 event notification.
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
