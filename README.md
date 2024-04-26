@@ -108,10 +108,11 @@ You can follow AWS Documentation on how to [enable and configuring event notific
 or use the Python Boto3 sample code below. Replace with your bucket name and path to metadata.
 
 ```python
+import boto3
 s3_client = boto3.client('s3')
 lambda_arn = "<REPLACE WITH YOUR ARN>"
-path_to_metadata_folder = "<REPLACE WITH YOUR S3 PATH>"
 bucket_name = "<REPLACE WITH YOUR S3 BUCKET NAME>"
+path_to_metadata_folder = "<REPLACE WITH YOUR S3 PATH>"
 
 notification_configuration = {
     'LambdaFunctionConfigurations': [
@@ -137,12 +138,14 @@ notification_configuration = {
         }
     ]
 }
-
 response = s3_client.put_bucket_notification_configuration(
     Bucket=bucket_name,
     NotificationConfiguration=notification_configuration
 )
-print(response)
+if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+    print("Success")
+else:
+    print("Something went wrong")
 
 ```
 
