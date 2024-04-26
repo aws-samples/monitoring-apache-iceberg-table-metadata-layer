@@ -1,10 +1,10 @@
-## Monitoring Apache Iceberg Table metadata layer using AWS Lambda AWS Glue and AWS CloudWatch
+## Monitoring Apache Iceberg Table metadata layer using AWS Lambda, AWS Glue and AWS CloudWatch
 
-This repository provides you with sample code on how to collect metrics of an existing Apache Iceberg table managed in Amazon S3. The code is part of AWS Lambda deployment package to collect and submit metrics into AWS CloudWatch. Repository also includes helper scripts for deploying CloudWatch monitoring dashboard to visualize collected metrics.
+This repository provides you with sample code on how to collect metrics of an existing Apache Iceberg table managed in Amazon S3. The code consists of AWS Lambda deployment package that collects and submits metrics into AWS CloudWatch. Repository also includes helper scripts for deploying CloudWatch monitoring dashboard to visualize collected metrics.
 
 ### Technical implementation
 
-![alt text](assets/diagram.png)
+![Architectural diagram of the solution](assets/diagram.png)
 
 * AWS Lambda triggered on every Iceberg snapshot creation to collect and send metrics to CloudWatch. This achieved by creating [S3 event notification](https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html). See [Setting up S3 event notification](#setting-up-s3-event-notification) section.
 * AWS Lambda code includes `pyiceberg` library and [AWS Glue interactive Sessions](https://docs.aws.amazon.com/glue/latest/dg/interactive-sessions-overview.html) with minimal compute to read `snapshots`, `partitions` and `files` Apache Iceberg metadata tables with Spark.
@@ -147,8 +147,52 @@ print(response)
 ```
 
 The final result should look like this
-![alt text](assets/trigger.png)
+![S3 to AWS Lambda trigger example](assets/trigger.png)
 
+#### 4. (Optional) Create CloudWatch Dashboard
+Once your Iceberg Table metrics are submitted to CloudWatch you can start using them to monitor and create alarms. CloudWatch also let you visualize metrics using CloudWatch Dashboards.
+
+`assets/cloudwatch-dashboard.template.json` is a sample CloudWatch dashboard configuration that uses fraction of the submitted metrics and combines it with AWS Glue native metrics for Apache Iceberg. 
+We use Jinja2 so you could generate your own dashboard by providing your parameters.
+
+TODO: include dashboard screenshot
+
+Run the script below to generate your own CloudWatch dashboard configuration.
+Replace input values with the relevant [parameters](#parameters) from previous sections.
+
+```python
+import json
+from jinja2 import Template
+
+def render_json_template(template_path, data):
+    with open(template_path, 'r') as file:
+        template_text = file.read()
+
+    template = Template(template_text)
+    rendered_json = template.render(data)
+    json_data = json.loads(rendered_json)
+    return json_data
+
+# Data to fill in the template
+data = {
+    "CW_NAMESPACE": "<< REPLACE >>",
+    "REGION": "<<REPLACE>>",
+    "DBNAME": "<<REPLACE>>",
+    "TABLENAME": "<<REPLACE>>"
+}
+
+# Path to cloudwatch template file
+template_path = 'assets/cloudwatch-dashboard.template.json'
+rendered_data = render_json_template(template_path, data)
+output_path = 'assets/cloudwatch-dashboard.rendered.json'
+
+with open(output_path, 'w') as file:
+        json.dump(rendered_data, file, indent=4)
+
+print(f"Your dashboard configuration successfully generated at {output_path}")
+```
+
+TODO: include instructions to create dashboard from configuration
 
 ### Test Locally
 
