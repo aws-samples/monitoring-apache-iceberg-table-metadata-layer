@@ -74,6 +74,11 @@ https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/i
 
 ### Build and Deploy
 
+> ! Important - The guidance below uses AWS Serverless Application Model (SAM) for easier packaging and deployment of AWS Lambda. However if you use your own packaging tool or if you want to deploy AWS Lambda manually you can explore following files:
+> - template.yaml
+> - lambda/requirements.txt
+> - lambda/app.py
+
 #### 1. Build AWS Lambda using AWS SAM CLI
 
 Once you've installed [Docker](#install-docker) and [SAM CLI](#install-sam-cli) you are ready to build the AWS Lambda. Open your terminal and run command below.
