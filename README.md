@@ -111,11 +111,12 @@ sam deploy --guided
 
 ##### Parameters
 
-- `CW_NAMESPACE` - A namespace is a container for CloudWatch metrics.
-- `DBNAME` - Glue Data Catalog Database Name.
-- `TABLENAME` - Apache Iceberg Table name as it appears in the Glue Data Catalog.
-- `GLUE_SERVICE_ROLE` - AWS Glue Role arn you created [earlier](#configuring-iam-permissions-for-aws-glue).
-- `SPARK_CATALOG_S3_WAREHOUSE` - Required catalog property to determine the root path of the data warehouse on S3. This can be any path on your S3 bucket. Not critical for the solution.
+- `CWNamespace` - A namespace is a container for CloudWatch metrics.
+- `DBName` - Glue Data Catalog Database Name.
+- `TableName` - Apache Iceberg Table name as it appears in the Glue Data Catalog.
+- `GlueServiceRole` - AWS Glue Role arn you created [earlier](#configuring-iam-permissions-for-aws-glue).
+- `Warehouse` - Required catalog property to determine the root path of the data warehouse on S3. This can be any path on your S3 bucket. Not critical for the solution.
+- `IcebergTableS3BucketName` - S3 bucket name is required to allow S3 bucket event notification. SAM will add resource-based permission to allow S3 bucket to invoke AWS Lambda.
 
 
 #### 3. Setting up S3 event notification
