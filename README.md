@@ -150,6 +150,7 @@ else:
 ```
 
 The final result should look like this
+
 ![S3 to AWS Lambda trigger example](assets/trigger.png)
 
 #### 4. (Optional) Create CloudWatch Dashboard
@@ -158,7 +159,8 @@ Once your Iceberg Table metrics are submitted to CloudWatch you can start using 
 `assets/cloudwatch-dashboard.template.json` is a sample CloudWatch dashboard configuration that uses fraction of the submitted metrics and combines it with AWS Glue native metrics for Apache Iceberg. 
 We use Jinja2 so you could generate your own dashboard by providing your parameters.
 
-TODO: include dashboard screenshot
+
+![CloudWatch Dashboard Screenshot](assets/cw-dashboard-screenshot.png)
 
 Run the script below to generate your own CloudWatch dashboard configuration.
 Replace input values with the relevant [parameters](#parameters) from previous sections.
