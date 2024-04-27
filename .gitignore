@@ -1,0 +1,6 @@
+.DS_Store
+temp
+assets/cloudwatch-dashboard.rendered.json
+samconfig.toml
+.aws-sam
+.env.local.json

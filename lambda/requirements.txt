@@ -1,0 +1,5 @@
+boto3==1.34.51
+botocore==1.34.51
+pyiceberg[s3fs,glue]
+pandas
+typing_extensions

@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters: 
+  CWNamespace: 
+    Description: Amazon CloudWatch custom metric namespace
+    Type: String
+  DBName: 
+    Description: AWS Glue Database Name
+    Type: String
+  TableName: 
+    Description: AWS Glue Table Name
+    Type: String
+  GlueServiceRole: 
+    Description: AWS Glue Service Role with permissions to create session.
+    Type: String
+  Warehouse: 
+    Description: warehouse is a required catalog property to determine the root path of the data warehouse in storage.
+    Type: String
+  IcebergTableS3BucketName: 
+    Description: this property is required to allow S3 bucket event notification. SAM will add resource-based permission to allow S3 bucket to invoke AWS Lambda.
+    Type: String
+Globals:
+  Function:
+    Timeout: 360
+    MemorySize: 512
+Resources:
+  IcebergMetricsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Policies: 
+        - CloudWatchPutMetricPolicy: {}
+        - S3ReadPolicy:
+            BucketName: !Ref IcebergTableS3BucketName
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+          - Sid: GlueInteractiveSessionPolicy
+            Effect: Allow
+            Action:
+            - glue:GetSession
+            - glue:CreateSession
+            - glue:GetStatement
+            - glue:RunStatement
+            - glue:GetSession
+            - glue:ListStatements
+            Resource: !Sub 'arn:aws:glue:*:${AWS::AccountId}:session/*'
+          - Sid: IAMPassRoleForGlueIS
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref GlueServiceRole
+          - Sid: GlueDataCatalogPolicy
+            Effect: Allow
+            Action:
+            - glue:GetTable
+            - glue:GetTableVersion
+            - glue:GetTables
+            - glue:GetDatabase
+            - glue:GetDatabases
+            - glue:SearchTables
+            - glue:GetTableVersions
+            - glue:GetPartitions
+            - glue:ListSessions
+            Resource: '*'
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          DBNAME: !Ref DBName
+          TABLENAME: !Ref TableName
+          CW_NAMESPACE: !Ref CWNamespace
+          GLUE_SERVICE_ROLE: !Ref GlueServiceRole
+          SPARK_CATALOG_S3_WAREHOUSE: !Ref Warehouse
+  S3LambdaInvokeResourceBasedPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt IcebergMetricsLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:s3:::${IcebergTableS3BucketName}'
+
+Outputs:
+  IcebergMetricsLambda:
+    Description: Lambda Function ARN
+    Value: !GetAtt IcebergMetricsLambda.Arn
