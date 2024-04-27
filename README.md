@@ -2,12 +2,26 @@
 
 This repository provides you with sample code on how to collect metrics of an existing Apache Iceberg table managed in Amazon S3. The code consists of AWS Lambda deployment package that collects and submits metrics into AWS CloudWatch. Repository also includes helper scripts for deploying CloudWatch monitoring dashboard to visualize collected metrics.
 
+### Table of Contents
+- [Technical implementation](#technical-implementation)
+- [Metrics collected](#metrics-collected)
+- [Setup](#setup)
+    - [Prerequisites](#prerequisites)
+    - [Build and Deploy](#build-and-deploy)
+    - [Test Locally](#test-locally)
+- [Dependencies](#dependencies)
+- [Clean Up](#clean-up)
+- [Security](#security)
+- [License](#license)
+
+
+
 ### Technical implementation
 
 ![Architectural diagram of the solution](assets/arch.png)
 
-* AWS Lambda triggered on every Iceberg snapshot creation to collect and send metrics to CloudWatch. This achieved by creating [S3 event notification](https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html). See [Setting up S3 event notification](#3-setting-up-s3-event-notification) section.
-* AWS Lambda code includes `pyiceberg` library and [AWS Glue interactive Sessions](https://docs.aws.amazon.com/glue/latest/dg/interactive-sessions-overview.html) with minimal compute to read `snapshots`, `partitions` and `files` Apache Iceberg metadata tables with Spark.
+* AWS Lambda triggered on every Iceberg snapshot creation to collect and send metrics to CloudWatch. This achieved with [S3 event notification](https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html). See [Setting up S3 event notification](#3-setting-up-s3-event-notification) section.
+* AWS Lambda code includes `pyiceberg` library and [AWS Glue interactive Sessions](https://docs.aws.amazon.com/glue/latest/dg/interactive-sessions-overview.html) with minimal compute to read `snapshots`, `partitions` and `files` Apache Iceberg metadata tables with Apache Spark.
 * AWS Lambda code aggregates information retrieved from metadata tables to create metrics and submits those to AWS CloudWatch.
 
 
@@ -63,14 +77,14 @@ https://docs.docker.com/get-docker/
 
 This solution is using AWS SAM CLI to build test and deploy AWS Lambda code that collects the Iceberg table metrics and submits them into AWS CloudWatch.
 
-To install AWS CLI follow AWS Documentation.
+To install AWS SAM CLI follow AWS Documentation. \
 https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html
 
 
 #### Configuring IAM permissions for AWS Glue
 
-[Step 1: Create an IAM policy for the AWS Glue service](https://docs.aws.amazon.com/glue/latest/dg/create-service-policy.html)
-[Step 2: Create an IAM role for AWS Glue](https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role.html)
+- [Step 1: Create an IAM policy for the AWS Glue service](https://docs.aws.amazon.com/glue/latest/dg/create-service-policy.html)
+- [Step 2: Create an IAM role for AWS Glue](https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role.html)
 
 ### Build and Deploy
 
