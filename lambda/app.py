@@ -22,8 +22,6 @@ for var in required_vars:
         raise EnvironmentError(f"Required environment variable '{var}' is not set.")
     
 cw_namespace = os.environ.get('CW_NAMESPACE')
-glue_db_name = os.environ.get('DBNAME')
-glue_table_name = os.environ.get('TABLENAME')
 glue_service_role = os.environ.get('GLUE_SERVICE_ROLE')
 warehouse_path = os.environ.get('SPARK_CATALOG_S3_WAREHOUSE')
 
@@ -83,18 +81,26 @@ def wait_for_statement(session_id,statement_id,interval=1):
             logger.info(f"Statement status={status}")
             return response
         time.sleep(interval)
-        
-def parse_statement_result(data_str, columns):
-    # Split the string into lines and filter out the irrelevant ones
-    lines = data_str.split('\n')[3:-3]  # Ignore the header and footer lines
-    # Split each line into components and strip the whitespace
-    data = [line.split('|')[1:-1] for line in lines]  # Remove empty strings at start and end
-    data = [[item.strip() for item in row] for row in data]  # Strip whitespace from each item
-    df = pd.DataFrame(data, columns=columns)
-    return df
-        
 
-def send_files_metrics(snapshot,session_id):
+    
+    
+def parse_spark_show_output(output):
+    lines = output.strip().split('\n')
+    header = lines[1]  # Column names are typically in the second line
+    columns = [col.strip() for col in header.split('|') if col.strip()]  # Clean and split by '|'
+
+    data = []
+    # Start reading data from the third line and skip the last line which is a border
+    for row in lines[3:-1]:
+        # Remove border and split
+        row_data = [cell.strip() for cell in row.split('|') if cell.strip()]
+        if row_data:
+            data.append(row_data)
+
+    # Create DataFrame
+    return pd.DataFrame(data, columns=columns)   
+
+def send_files_metrics(glue_db_name, glue_table_name, snapshot,session_id):
     sql_stmt = f"select file_path,record_count,file_size_in_bytes from glue_catalog.{glue_db_name}.{glue_table_name}.files"    
     run_stmt_response = glue_client.run_statement(
         SessionId=session_id,
@@ -104,15 +110,13 @@ def send_files_metrics(snapshot,session_id):
     logger.info(f"select files statement_id={stmt_id}")
     stmt_response = wait_for_statement(session_id, run_stmt_response["Id"])
     data_str = stmt_response["Statement"]["Output"]["Data"]["TextPlain"]
-    files_metrics_columns = ["file_path","record_count", "file_size_in_bytes"]
-    df = parse_statement_result(data_str,files_metrics_columns)
-    
+    logging.info(stmt_response)
+    df = parse_spark_show_output(data_str)
     file_metrics = {
         "avg_record_count": df["record_count"].astype(int).mean().astype(int),
         "max_record_count": df["record_count"].astype(int).max(),
         "min_record_count": df["record_count"].astype(int).min(),
         "deviation_record_count": df['record_count'].astype(int).std().round(2),
-        "skew_record_count": df['record_count'].astype(int).skew().round(2),
         "avg_file_size": df['file_size_in_bytes'].astype(int).mean().astype(int),
         "max_file_size": df['file_size_in_bytes'].astype(int).max(),
         "min_file_size": df['file_size_in_bytes'].astype(int).min(),
@@ -135,7 +139,7 @@ def send_files_metrics(snapshot,session_id):
         )
     
 
-def send_partition_metrics(snapshot,session_id):
+def send_partition_metrics(glue_db_name, glue_table_name, snapshot,session_id):
     sql_stmt = f"select partition,record_count,file_count from glue_catalog.{glue_db_name}.{glue_table_name}.partitions"    
     run_stmt_response = glue_client.run_statement(
         SessionId=session_id,
@@ -146,8 +150,12 @@ def send_partition_metrics(snapshot,session_id):
     logger.info(f"send_partition_metrics() -> statement_id={stmt_id}")
     stmt_response = wait_for_statement(session_id, stmt_id)
     data_str = stmt_response["Statement"]["Output"]["Data"]["TextPlain"]
-    partition_metrics_columns = ['partition', 'record_count', 'file_count']
-    df = parse_statement_result(data_str,partition_metrics_columns)
+
+    if data_str == "":
+        logger.info("No partitions found")
+        return
+    
+    df = parse_spark_show_output(data_str)
     partition_metrics = {
         "avg_record_count": df["record_count"].astype(int).mean().astype(int),
         "max_record_count": df["record_count"].astype(int).max(),
@@ -249,9 +257,11 @@ def dt_to_ts(dt_str):
     timestamp_seconds = dt_obj.timestamp()
     return int(timestamp_seconds * 1000)
 
-def send_snapshot_metrics(snapshot_id, session_id):
+
+def send_snapshot_metrics(glue_db_name, glue_table_name, snapshot_id, session_id):
     logger.info("send_snapshot_metrics")
     sql_stmt = f"select committed_at,snapshot_id,operation,summary from glue_catalog.{glue_db_name}.{glue_table_name}.snapshots where snapshot_id={snapshot_id}"
+    logging.debug(sql_stmt)
     run_stmt_response = glue_client.run_statement(
         SessionId=session_id,
         Code=f"df=spark.sql(\"{sql_stmt}\");json_rdd=df.toJSON();json_strings=json_rdd.collect();print(json_strings)"
@@ -288,20 +298,38 @@ def send_snapshot_metrics(snapshot_id, session_id):
             timestamp = timestamp_ms,
         ) 
 
+# check if glue table is of iceberg format, return boolean
+def check_table_is_of_iceberg_format(event):
+    response = glue_client.get_table(
+        DatabaseName=event["detail"]["databaseName"],
+        Name=event["detail"]["tableName"],
+    )
+    try:
+        return response["Table"]["Parameters"]["table_type"] == "ICEBERG"
+    except KeyError:
+        logging.warning("check_table_is_of_iceberg_format() -> table_type is missing")
+        return False
+    
 
 def lambda_handler(event, context):
-    log_format = f"[{context.aws_request_id}:%(asctime)s.%(msecs)03d] %(message)s"
-    logging.basicConfig(format=log_format, datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
+    log_format = f"[{context.aws_request_id}:%(message)s"
+    logging.basicConfig(format=log_format, level=logging.INFO)
     
+    # Ensure Table is of Iceberg format.
+    if not check_table_is_of_iceberg_format(event):
+        logging.info("Table is not of Iceberg format, skipping metrics generation")
+        return
     
-    catalog = GlueCatalog("default")
+    glue_db_name = event["detail"]["databaseName"]
+    glue_table_name =  event["detail"]["tableName"]
+    
+    catalog = GlueCatalog(glue_db_name)
     table = catalog.load_table((glue_db_name, glue_table_name))
     logger.info(f"current snapshot id={table.metadata.current_snapshot_id}")
     snapshot = table.metadata.snapshot_by_id(table.metadata.current_snapshot_id)
-    
     logger.info("Using glue IS to produce metrics")
     session_id = create_or_reuse_glue_session()
     
-    send_snapshot_metrics(table.metadata.current_snapshot_id, session_id)
-    send_partition_metrics(snapshot,session_id)
-    send_files_metrics(snapshot,session_id)
+    send_snapshot_metrics(glue_db_name, glue_table_name, table.metadata.current_snapshot_id, session_id)
+    send_partition_metrics(glue_db_name, glue_table_name, snapshot,session_id)
+    send_files_metrics(glue_db_name, glue_table_name, snapshot,session_id)
