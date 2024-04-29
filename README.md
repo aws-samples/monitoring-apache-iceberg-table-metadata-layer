@@ -111,68 +111,10 @@ sam deploy --guided
 ##### Parameters
 
 - `CWNamespace` - A namespace is a container for CloudWatch metrics.
-- `DBName` - Glue Data Catalog Database Name.
-- `TableName` - Apache Iceberg Table name as it appears in the Glue Data Catalog.
 - `GlueServiceRole` - AWS Glue Role arn you created [earlier](#configuring-iam-permissions-for-aws-glue).
 - `Warehouse` - Required catalog property to determine the root path of the data warehouse on S3. This can be any path on your S3 bucket. Not critical for the solution.
-- `IcebergTableS3BucketName` - S3 bucket name is required to allow S3 bucket event notification. SAM will add resource-based permission to allow S3 bucket to invoke AWS Lambda.
 
-
-#### 3. Setting up S3 event notification
-
-You need to setup an automatic trigger that will activate AWS Lambda metrics collection on every Apache Iceberg commit. This solution is relying on S3 event notification feature to trigger AWS Lambda every time new `metadata.json` is written to S3 `metadata` folder of the table.
-
-You can follow AWS Documentation on how to [enable and configuring event notifications using the Amazon S3 console](https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-event-notifications.html).
-
-or use the Python Boto3 sample code below. Replace with your bucket name and path to metadata.
-
-```python
-import boto3
-s3_client = boto3.client('s3')
-lambda_arn = "<REPLACE WITH YOUR ARN>"
-bucket_name = "<REPLACE WITH YOUR S3 BUCKET NAME>"
-path_to_metadata_folder = "<REPLACE WITH YOUR S3 PATH>"
-
-notification_configuration = {
-    'LambdaFunctionConfigurations': [
-        {
-            'LambdaFunctionArn': lambda_arn,
-            'Events': [
-                's3:ObjectCreated:Put'
-            ],
-            'Filter': {
-                'Key': {
-                    'FilterRules': [
-                        {
-                            'Name': 'Prefix',
-                            'Value': path_to_metadata_folder
-                        },
-                        {
-                            'Name': 'Suffix',
-                            'Value': '.json'
-                        }
-                    ]
-                }
-            }
-        }
-    ]
-}
-response = s3_client.put_bucket_notification_configuration(
-    Bucket=bucket_name,
-    NotificationConfiguration=notification_configuration
-)
-if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-    print("Success")
-else:
-    print("Something went wrong")
-
-```
-
-The final result should look like this
-
-![S3 to AWS Lambda trigger example](assets/trigger.png)
-
-#### 4. (Optional) Create CloudWatch Dashboard
+#### 3. (Optional) Create CloudWatch Dashboard
 Once your Iceberg Table metrics are submitted to CloudWatch you can start using them to monitor and create alarms. CloudWatch also let you visualize metrics using CloudWatch Dashboards.
 
 `assets/cloudwatch-dashboard.template.json` is a sample CloudWatch dashboard configuration that uses fraction of the submitted metrics and combines it with AWS Glue native metrics for Apache Iceberg. 
@@ -254,7 +196,6 @@ https://docs.docker.com/get-docker/
 
 1. Delete AWS Lambda `sam delete`.
 2. Delete CloudWatch Dashboard.
-3. Remove S3 event notification.
 
 ## Security
 

@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 
 glue_client = boto3.client('glue')
 
-required_vars = ['DBNAME', 'TABLENAME', 'CW_NAMESPACE', 'GLUE_SERVICE_ROLE', 'SPARK_CATALOG_S3_WAREHOUSE']
+required_vars = ['CW_NAMESPACE', 'GLUE_SERVICE_ROLE', 'SPARK_CATALOG_S3_WAREHOUSE']
 for var in required_vars:
     # Retrieve the environment variable value
     if os.getenv(var) is None:
@@ -110,7 +110,7 @@ def send_files_metrics(glue_db_name, glue_table_name, snapshot,session_id):
     logger.info(f"select files statement_id={stmt_id}")
     stmt_response = wait_for_statement(session_id, run_stmt_response["Id"])
     data_str = stmt_response["Statement"]["Output"]["Data"]["TextPlain"]
-    logging.info(stmt_response)
+    logger.info(stmt_response)
     df = parse_spark_show_output(data_str)
     file_metrics = {
         "avg_record_count": df["record_count"].astype(int).mean().astype(int),
@@ -261,7 +261,7 @@ def dt_to_ts(dt_str):
 def send_snapshot_metrics(glue_db_name, glue_table_name, snapshot_id, session_id):
     logger.info("send_snapshot_metrics")
     sql_stmt = f"select committed_at,snapshot_id,operation,summary from glue_catalog.{glue_db_name}.{glue_table_name}.snapshots where snapshot_id={snapshot_id}"
-    logging.debug(sql_stmt)
+    logger.debug(sql_stmt)
     run_stmt_response = glue_client.run_statement(
         SessionId=session_id,
         Code=f"df=spark.sql(\"{sql_stmt}\");json_rdd=df.toJSON();json_strings=json_rdd.collect();print(json_strings)"
@@ -307,7 +307,7 @@ def check_table_is_of_iceberg_format(event):
     try:
         return response["Table"]["Parameters"]["table_type"] == "ICEBERG"
     except KeyError:
-        logging.warning("check_table_is_of_iceberg_format() -> table_type is missing")
+        logger.warning("check_table_is_of_iceberg_format() -> table_type is missing")
         return False
     
 
@@ -317,7 +317,7 @@ def lambda_handler(event, context):
     
     # Ensure Table is of Iceberg format.
     if not check_table_is_of_iceberg_format(event):
-        logging.info("Table is not of Iceberg format, skipping metrics generation")
+        logger.info("Table is not of Iceberg format, skipping metrics generation")
         return
     
     glue_db_name = event["detail"]["databaseName"]
