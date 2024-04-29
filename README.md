@@ -58,7 +58,6 @@ This repository provides you with sample code on how to collect metrics of an ex
 * files.max_record_count
 * files.min_record_count
 * files.deviation_record_count
-* files.skew_record_count
 * files.avg_file_size
 * files.max_file_size
 * files.min_file_size

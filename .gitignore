@@ -4,3 +4,4 @@ assets/cloudwatch-dashboard.rendered.json
 samconfig.toml
 .aws-sam
 .env.local.json
+events/my.event.json
