@@ -1,6 +1,6 @@
 ## Monitoring Apache Iceberg Table metadata layer using AWS Lambda, AWS Glue and AWS CloudWatch
 
-This repository provides you with sample code on how to collect metrics of an existing Apache Iceberg table managed in Amazon S3. The code consists of AWS Lambda deployment package that collects and submits metrics into AWS CloudWatch. Repository also includes helper scripts for deploying CloudWatch monitoring dashboard to visualize collected metrics.
+This repository provides you with sample code that collects metrics of existing Apache Iceberg tables managed in your Amazon S3 and catalogued to AWS Glue Data Catalog. The code consists of AWS Lambda deployment package that collects and submits metrics into AWS CloudWatch. Repository also includes helper script for deploying CloudWatch monitoring dashboard to visualize collected metrics.
 
 ### Table of Contents
 - [Technical implementation](#technical-implementation)
@@ -20,9 +20,9 @@ This repository provides you with sample code on how to collect metrics of an ex
 
 ![Architectural diagram of the solution](assets/arch.png)
 
-* AWS Lambda triggered on every Iceberg snapshot creation to collect and send metrics to CloudWatch. This achieved with [S3 event notification](https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html). See [Setting up S3 event notification](#3-setting-up-s3-event-notification) section.
+* Amazon EventBridge rule triggers AWS Lambda on every event of  *Glue Data Catalog Table State Change*. Event triggered every time transaction committed to Apache Iceberg Table.
+* Triggered AWS Lambda code aggregates information retrieved from metadata tables to create [metrics](#metrics-collected) and submits those to Amazon CloudWatch.
 * AWS Lambda code includes `pyiceberg` library and [AWS Glue interactive Sessions](https://docs.aws.amazon.com/glue/latest/dg/interactive-sessions-overview.html) with minimal compute to read `snapshots`, `partitions` and `files` Apache Iceberg metadata tables with Apache Spark.
-* AWS Lambda code aggregates information retrieved from metadata tables to create metrics and submits those to AWS CloudWatch.
 
 
 ### Metrics collected

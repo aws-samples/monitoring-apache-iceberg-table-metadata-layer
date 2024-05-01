@@ -74,7 +74,6 @@ Resources:
           CW_NAMESPACE: !Ref CWNamespace
           GLUE_SERVICE_ROLE: !Ref GlueServiceRole
           SPARK_CATALOG_S3_WAREHOUSE: !Ref Warehouse
-
   PermissionForEventBridgeToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
