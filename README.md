@@ -114,7 +114,57 @@ sam deploy --guided
 - `GlueServiceRole` - AWS Glue Role arn you created [earlier](#configuring-iam-permissions-for-aws-glue).
 - `Warehouse` - Required catalog property to determine the root path of the data warehouse on S3. This can be any path on your S3 bucket. Not critical for the solution.
 
-#### 3. (Optional) Create CloudWatch Dashboard
+
+#### 3. Configure EventBridge Trigger
+
+In this section you will configure EventBridge Rule that will trigger Lambda function on every transaction commit to Apache Iceberg table.
+Default rule listens to `Glue Data Catalog Table State Change` event from all the tables in Glue Data Catalog catalog. Lambda code knows to skip non-iceberg tables.
+If you want to scope triggers to specific Iceberg Tables and not collecting metrics from all of them you can uncomment `glue_table_names = ["<<REPLACE TABLE 1>>", "<<REPLACE TABLE 1>>"]` and add relevant table names.
+
+```python
+import boto3
+import json
+
+# Initialize a boto3 client
+lambda_client = boto3.client('lambda')
+events_client = boto3.client('events')
+
+# Parameters
+lambda_function_arn = '<<REPLACE WITH LAMBDA FUNCTION ARN>>'
+glue_table_names = None
+# glue_table_names = ["<<REPLACE TABLE 1>>", "<<REPLACE TABLE 1>>"]
+
+# Create EventBridge Rule
+event_pattern = {
+    "source": ["aws.glue"],
+    "detail-type": ["Glue Data Catalog Table State Change"]
+}
+
+if glue_table_names:
+    event_pattern
+    event_pattern["detail"] = {
+        "tableName":  glue_table_names   
+    }
+event_pattern_dump = json.dumps(event_pattern)
+rule_response = events_client.put_rule(
+    Name='IcebergTablesUpdateRule',
+    EventPattern=event_pattern_dump,
+    State='ENABLED'
+)
+# Add Lambda as a target to the EventBridge Rule
+events_client.put_targets(
+    Rule='IcebergTablesUpdateRule',
+    Targets=[
+        {
+            'Id': '1',
+            'Arn': lambda_function_arn
+        }
+    ]
+)
+print(f"Pattern updated = {event_pattern_dump}")
+```
+
+#### 4. (Optional) Create CloudWatch Dashboard
 Once your Iceberg Table metrics are submitted to CloudWatch you can start using them to monitor and create alarms. CloudWatch also let you visualize metrics using CloudWatch Dashboards.
 
 `assets/cloudwatch-dashboard.template.json` is a sample CloudWatch dashboard configuration that uses fraction of the submitted metrics and combines it with AWS Glue native metrics for Apache Iceberg. 

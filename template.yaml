@@ -15,19 +15,6 @@ Globals:
     Timeout: 360
     MemorySize: 512
 Resources:
-  GlueTableChangeEventBridgeRule:
-      Type: AWS::Events::Rule
-      Properties:
-        Description: "Trigger Lambda on Glue Table State Change"
-        EventPattern:
-          source:
-            - "aws.glue"
-          detail-type:
-            - "Glue Data Catalog Table State Change"
-        State: "ENABLED"
-        Targets:
-          - Arn: !GetAtt IcebergMetricsLambda.Arn
-            Id: "TargetFunction"
   IcebergMetricsLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -80,7 +67,7 @@ Resources:
       FunctionName: !Ref IcebergMetricsLambda
       Action: 'lambda:InvokeFunction'
       Principal: 'events.amazonaws.com'
-      SourceArn: !GetAtt GlueTableChangeEventBridgeRule.Arn
+      SourceArn: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/IcebergTablesUpdateRule*'
 Outputs:
   IcebergMetricsLambda:
     Description: Lambda Function ARN
