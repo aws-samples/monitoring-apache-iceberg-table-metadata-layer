@@ -4,20 +4,11 @@ Parameters:
   CWNamespace: 
     Description: Amazon CloudWatch custom metric namespace
     Type: String
-  DBName: 
-    Description: AWS Glue Database Name
-    Type: String
-  TableName: 
-    Description: AWS Glue Table Name
-    Type: String
   GlueServiceRole: 
     Description: AWS Glue Service Role with permissions to create session.
     Type: String
   Warehouse: 
     Description: warehouse is a required catalog property to determine the root path of the data warehouse in storage.
-    Type: String
-  IcebergTableS3BucketName: 
-    Description: this property is required to allow S3 bucket event notification. SAM will add resource-based permission to allow S3 bucket to invoke AWS Lambda.
     Type: String
 Globals:
   Function:
@@ -32,9 +23,8 @@ Resources:
       Runtime: python3.9
       Policies: 
         - CloudWatchPutMetricPolicy: {}
-        - S3ReadPolicy:
-            BucketName: !Ref IcebergTableS3BucketName
         - AWSLambdaBasicExecutionRole
+        - AmazonS3ReadOnlyAccess
         - Statement:
           - Sid: GlueInteractiveSessionPolicy
             Effect: Allow
@@ -68,20 +58,16 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          DBNAME: !Ref DBName
-          TABLENAME: !Ref TableName
           CW_NAMESPACE: !Ref CWNamespace
           GLUE_SERVICE_ROLE: !Ref GlueServiceRole
           SPARK_CATALOG_S3_WAREHOUSE: !Ref Warehouse
-  S3LambdaInvokeResourceBasedPermission:
+  PermissionForEventBridgeToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !GetAtt IcebergMetricsLambda.Arn
-      Action: lambda:InvokeFunction
-      Principal: s3.amazonaws.com
-      SourceAccount: !Ref 'AWS::AccountId'
-      SourceArn: !Sub 'arn:aws:s3:::${IcebergTableS3BucketName}'
-
+      FunctionName: !Ref IcebergMetricsLambda
+      Action: 'lambda:InvokeFunction'
+      Principal: 'events.amazonaws.com'
+      SourceArn: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/IcebergTablesUpdateRule*'
 Outputs:
   IcebergMetricsLambda:
     Description: Lambda Function ARN

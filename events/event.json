@@ -1,0 +1,18 @@
+{
+    "version": "0",
+    "id": "f9155a75-bc7c-d7b8-e240-asd234fdfg",
+    "detail-type": "Glue Data Catalog Table State Change",
+    "source": "aws.glue",
+    "account": "12345678910",
+    "time": "2024-04-29T19:11:21Z",
+    "region": "us-east-1",
+    "resources": [
+        "arn:aws:glue:us-east-1:12345678910:table/sample_db_name/sample_iceberg_table"
+    ],
+    "detail": {
+        "databaseName": "sample_db_name",
+        "changedPartitions": [],
+        "typeOfChange": "UpdateTable",
+        "tableName": "sample_iceberg_table"
+    }
+}
