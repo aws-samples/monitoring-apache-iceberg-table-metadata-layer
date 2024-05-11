@@ -1,8 +1,9 @@
 ## Monitoring Apache Iceberg Table metadata layer using AWS Lambda, AWS Glue and AWS CloudWatch
 
-This repository provides you with sample code that collects metrics of existing Apache Iceberg tables managed in your Amazon S3 and catalogued to AWS Glue Data Catalog. The code consists of AWS Lambda deployment package that collects and submits metrics into AWS CloudWatch. Repository also includes helper script for deploying CloudWatch monitoring dashboard to visualize collected metrics.
+This repository provides you with a sample solution that collects metrics of existing Apache Iceberg tables managed in your Amazon S3 and catalogued to AWS Glue Data Catalog. The solution consists of AWS Lambda deployment package that collects and submits metrics into AWS CloudWatch. Repository also includes helper script for deploying CloudWatch monitoring dashboard to visualize collected metrics.
 
 ### Table of Contents
+- [Solution Tenets](#solution-tenets)
 - [Technical implementation](#technical-implementation)
 - [Metrics collected](#metrics-collected)
 - [Setup](#setup)
@@ -14,7 +15,10 @@ This repository provides you with sample code that collects metrics of existing 
 - [Security](#security)
 - [License](#license)
 
-
+### Solution Tenets
+* Solution is designed to provide time-series metrics for Apache Iceberg to monitor Apache Iceberg tables over-time to recognize trends and anomalies. 
+* Solution is designed to be lightweight and collect metrics exclusively from Apache Iceberg metadata layer without scanning the data layer hense without the need for heavy compute capacity.
+* In the future we strive to reduce the dependency on AWS Glue in favor of using AWS Lambda compute when required features are available in [PyIceberg](https://py.iceberg.apache.org) library.
 
 ### Technical implementation
 
@@ -246,6 +250,7 @@ https://docs.docker.com/get-docker/
 
 1. Delete AWS Lambda `sam delete`.
 2. Delete CloudWatch Dashboard.
+3. Delete EventBridge rule.
 
 ## Security
 
