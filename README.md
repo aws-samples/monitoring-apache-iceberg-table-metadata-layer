@@ -130,8 +130,9 @@ import boto3
 import json
 
 # Initialize a boto3 client
-lambda_client = boto3.client('lambda')
-events_client = boto3.client('events')
+session = boto3.Session(region_name='<<SET CORRECT AWS REGION>>')
+lambda_client = session.client('lambda')
+events_client = session.client('events')
 
 # Parameters
 lambda_function_arn = '<<REPLACE WITH LAMBDA FUNCTION ARN>>'
