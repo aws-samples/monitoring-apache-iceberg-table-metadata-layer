@@ -26,7 +26,7 @@ glue_service_role = os.environ.get('GLUE_SERVICE_ROLE')
 warehouse_path = os.environ.get('SPARK_CATALOG_S3_WAREHOUSE')
 
 glue_session_tags = {
-    "app": "iceberg-monitoring"
+    "app": "monitor-iceberg"
 }
 
 def send_custom_metric( metric_name, dimensions, value, unit, namespace, timestamp=None):
@@ -215,13 +215,30 @@ def send_partition_metrics(glue_db_name, glue_table_name, snapshot,session_id):
             timestamp = snapshot.timestamp_ms,
         )
 
+def get_all_sessions():
+    sessions = []
+    next_token = None
+    
+    while True:
+        if next_token:
+            response = glue_client.list_sessions(Tags=glue_session_tags, NextToken=next_token)
+        else:
+            response = glue_client.list_sessions(Tags=glue_session_tags)
+        
+        sessions.extend(response['Sessions'])
+        next_token = response.get('NextToken')
+        
+        if not next_token:
+            break
+    
+    return sessions
+    
 def create_or_reuse_glue_session():
     session_id = None
     
-    glue_sessions = glue_client.list_sessions(
-        Tags=glue_session_tags,
-    )
-    for session in glue_sessions["Sessions"]:
+    glue_sessions = get_all_sessions()
+    
+    for session in glue_sessions:
         if(session["Status"] == "READY"):
             session_id = session["Id"]
             logger.info(f"Found existing session_id={session_id}")
@@ -235,7 +252,7 @@ def create_or_reuse_glue_session():
             Id=session_id,
             Role=glue_service_role,
             Command={'Name': 'glueetl', "PythonVersion": "3"},
-            Timeout=60,
+            Timeout=120,
             DefaultArguments={
                 "--enable-glue-datacatalog": "true",
                 "--enable-observability-metrics": "true",
@@ -245,7 +262,7 @@ def create_or_reuse_glue_session():
             GlueVersion="4.0",
             NumberOfWorkers=2,
             WorkerType="G.1X",
-            IdleTimeout=120,
+            IdleTimeout=30,
             Tags=glue_session_tags,
         )
         wait_for_session(session_id)
