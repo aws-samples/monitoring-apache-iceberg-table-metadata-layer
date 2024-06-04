@@ -101,7 +101,7 @@ def parse_spark_show_output(output):
     return pd.DataFrame(data, columns=columns)   
 
 def send_files_metrics(glue_db_name, glue_table_name, snapshot,session_id):
-    sql_stmt = f"select file_path,record_count,file_size_in_bytes from glue_catalog.{glue_db_name}.{glue_table_name}.files"    
+    sql_stmt = f"SELECT CAST(AVG(record_count) as INT) as avg_record_count, MAX(record_count) as max_record_count, MIN(record_count) as min_record_count, CAST(AVG(file_size_in_bytes) as INT) as avg_file_size, MAX(file_size_in_bytes) as max_file_size, MIN(file_size_in_bytes) as min_file_size FROM glue_catalog.{glue_db_name}.{glue_table_name}.files"
     run_stmt_response = glue_client.run_statement(
         SessionId=session_id,
         Code=f"df = spark.sql(\"{sql_stmt}\");df.show(df.count(),truncate=False)"
@@ -112,14 +112,14 @@ def send_files_metrics(glue_db_name, glue_table_name, snapshot,session_id):
     data_str = stmt_response["Statement"]["Output"]["Data"]["TextPlain"]
     logger.info(stmt_response)
     df = parse_spark_show_output(data_str)
+    df = df.applymap(int)
     file_metrics = {
-        "avg_record_count": df["record_count"].astype(int).mean().astype(int),
-        "max_record_count": df["record_count"].astype(int).max(),
-        "min_record_count": df["record_count"].astype(int).min(),
-        "deviation_record_count": df['record_count'].astype(int).std().round(2),
-        "avg_file_size": df['file_size_in_bytes'].astype(int).mean().astype(int),
-        "max_file_size": df['file_size_in_bytes'].astype(int).max(),
-        "min_file_size": df['file_size_in_bytes'].astype(int).min(),
+        "avg_record_count": df.iloc[0]["avg_record_count"],
+        "max_record_count": df.iloc[0]["max_record_count"],
+        "min_record_count": df.iloc[0]["min_record_count"],
+        "avg_file_size": df.iloc[0]['avg_file_size'],
+        "max_file_size": df.iloc[0]['max_file_size'],
+        "min_file_size": df.iloc[0]['min_file_size'],
     }
     logger.info("file_metrics=")
     logger.info(file_metrics)
