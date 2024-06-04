@@ -61,7 +61,6 @@ This repository provides you with a sample solution that collects metrics of exi
 * files.avg_record_count
 * files.max_record_count
 * files.min_record_count
-* files.deviation_record_count
 * files.avg_file_size
 * files.max_file_size
 * files.min_file_size
