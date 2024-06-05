@@ -26,7 +26,7 @@ glue_service_role = os.environ.get('GLUE_SERVICE_ROLE')
 warehouse_path = os.environ.get('SPARK_CATALOG_S3_WAREHOUSE')
 
 glue_session_tags = {
-    "app": "iceberg-monitoring"
+    "app": "monitor-iceberg"
 }
 
 def send_custom_metric( metric_name, dimensions, value, unit, namespace, timestamp=None):
@@ -101,7 +101,7 @@ def parse_spark_show_output(output):
     return pd.DataFrame(data, columns=columns)   
 
 def send_files_metrics(glue_db_name, glue_table_name, snapshot,session_id):
-    sql_stmt = f"select file_path,record_count,file_size_in_bytes from glue_catalog.{glue_db_name}.{glue_table_name}.files"    
+    sql_stmt = f"SELECT CAST(AVG(record_count) as INT) as avg_record_count, MAX(record_count) as max_record_count, MIN(record_count) as min_record_count, CAST(AVG(file_size_in_bytes) as INT) as avg_file_size, MAX(file_size_in_bytes) as max_file_size, MIN(file_size_in_bytes) as min_file_size FROM glue_catalog.{glue_db_name}.{glue_table_name}.files"
     run_stmt_response = glue_client.run_statement(
         SessionId=session_id,
         Code=f"df = spark.sql(\"{sql_stmt}\");df.show(df.count(),truncate=False)"
@@ -112,14 +112,14 @@ def send_files_metrics(glue_db_name, glue_table_name, snapshot,session_id):
     data_str = stmt_response["Statement"]["Output"]["Data"]["TextPlain"]
     logger.info(stmt_response)
     df = parse_spark_show_output(data_str)
+    df = df.applymap(int)
     file_metrics = {
-        "avg_record_count": df["record_count"].astype(int).mean().astype(int),
-        "max_record_count": df["record_count"].astype(int).max(),
-        "min_record_count": df["record_count"].astype(int).min(),
-        "deviation_record_count": df['record_count'].astype(int).std().round(2),
-        "avg_file_size": df['file_size_in_bytes'].astype(int).mean().astype(int),
-        "max_file_size": df['file_size_in_bytes'].astype(int).max(),
-        "min_file_size": df['file_size_in_bytes'].astype(int).min(),
+        "avg_record_count": df.iloc[0]["avg_record_count"],
+        "max_record_count": df.iloc[0]["max_record_count"],
+        "min_record_count": df.iloc[0]["min_record_count"],
+        "avg_file_size": df.iloc[0]['avg_file_size'],
+        "max_file_size": df.iloc[0]['max_file_size'],
+        "min_file_size": df.iloc[0]['min_file_size'],
     }
     logger.info("file_metrics=")
     logger.info(file_metrics)
@@ -215,13 +215,30 @@ def send_partition_metrics(glue_db_name, glue_table_name, snapshot,session_id):
             timestamp = snapshot.timestamp_ms,
         )
 
+def get_all_sessions():
+    sessions = []
+    next_token = None
+    
+    while True:
+        if next_token:
+            response = glue_client.list_sessions(Tags=glue_session_tags, NextToken=next_token)
+        else:
+            response = glue_client.list_sessions(Tags=glue_session_tags)
+        
+        sessions.extend(response['Sessions'])
+        next_token = response.get('NextToken')
+        
+        if not next_token:
+            break
+    
+    return sessions
+    
 def create_or_reuse_glue_session():
     session_id = None
     
-    glue_sessions = glue_client.list_sessions(
-        Tags=glue_session_tags,
-    )
-    for session in glue_sessions["Sessions"]:
+    glue_sessions = get_all_sessions()
+    
+    for session in glue_sessions:
         if(session["Status"] == "READY"):
             session_id = session["Id"]
             logger.info(f"Found existing session_id={session_id}")
@@ -235,7 +252,7 @@ def create_or_reuse_glue_session():
             Id=session_id,
             Role=glue_service_role,
             Command={'Name': 'glueetl', "PythonVersion": "3"},
-            Timeout=60,
+            Timeout=120,
             DefaultArguments={
                 "--enable-glue-datacatalog": "true",
                 "--enable-observability-metrics": "true",
@@ -245,7 +262,7 @@ def create_or_reuse_glue_session():
             GlueVersion="4.0",
             NumberOfWorkers=2,
             WorkerType="G.1X",
-            IdleTimeout=120,
+            IdleTimeout=30,
             Tags=glue_session_tags,
         )
         wait_for_session(session_id)
