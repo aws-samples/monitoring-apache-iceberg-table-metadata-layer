@@ -18,7 +18,6 @@ This repository provides you with a sample solution that collects metrics of exi
 ### Solution Tenets
 * Solution is designed to provide time-series metrics for Apache Iceberg to monitor Apache Iceberg tables over-time to recognize trends and anomalies. 
 * Solution is designed to be lightweight and collect metrics exclusively from Apache Iceberg metadata layer without scanning the data layer hense without the need for heavy compute capacity.
-* In the future we strive to reduce the dependency on AWS Glue in favor of using AWS Lambda compute when required features are available in [PyIceberg](https://py.iceberg.apache.org) library.
 
 ### Technical implementation
 
@@ -90,35 +89,43 @@ https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/i
 
 ### Build and Deploy
 
-> ! Important - The guidance below uses AWS Serverless Application Model (SAM) for easier packaging and deployment of AWS Lambda. However if you use your own packaging tool or if you want to deploy AWS Lambda manually you can explore following files:
+> ! Important - The guidance below uses AWS Serverless Application Model (SAM) and Amazon ECR for easier packaging and deployment of AWS Lambda. However if you use your own packaging tool or if you want to deploy AWS Lambda manually you can explore following files:
 > - template.yaml
 > - lambda/requirements.txt
 > - lambda/app.py
+> Once you've installed [Docker](#install-docker) and [SAM CLI](#install-sam-cli) you are ready to build the AWS Lambda. Open your terminal and run command below.
 
-#### 1. Build AWS Lambda using AWS SAM CLI
-
-Once you've installed [Docker](#install-docker) and [SAM CLI](#install-sam-cli) you are ready to build the AWS Lambda. Open your terminal and run command below.
+#### 1. Build and Deploy Script
 
 ```bash
+export CLOUDWATCH_NAMESPACE={{ cw_namespace }}
+export AWS_REGION={{ aws_region }}
+export aws_account_id={{ aws_account_id }}
+export ecr_repository_name={{ repository_name }}
+export STACK_NAME={{ your_stack_name }}
+export S3_ARTIFACTS_BUCKET_NAME={{ s3_bucket_name }}
+export S3_ARTIFACTS_PATH={{ s3_bucket_path }}
+export ecr_repository_uri=${aws_account_id}.dkr.ecr.$AWS_REGION.amazonaws.com/${ecr_repository_name}
+
+docker build -f Dockerfile --platform linux/amd64 -t ${ecr_repository_name}:main --build-arg CLOUDWATCH_NAMESPACE=$CLOUDWATCH_NAMESPACE .
 sam build --use-container
-```
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${aws_account_id}.dkr.ecr.us-east-1.amazonaws.com
+aws ecr create-repository --repository-name $ecr_repository_name --region $AWS_REGION --image-scanning-configuration scanOnPush=true --image-tag-mutability MUTABLE
+docker tag ${ecr_repository_name}:main ${ecr_repository_uri}:latest
+docker push ${ecr_repository_uri}:latest
 
-#### 2. Deploy AWS Lambda using AWS SAM CLI
-
-Once build is finished you can deploy your AWS Lambda. SAM will upload packaged code and deploy AWS Lambda resource using AWS CloudFormation. Run below command using your terminal.
-
-```bash
-sam deploy --guided
+sam deploy --guided --debug --region $AWS_REGION \
+        --parameter-overrides ImageURL=${ecr_repository_uri}:latest \
+        --image-repository $ecr_repository_uri \
+        --stack-name $STACK_NAME --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+        --s3-bucket $S3_ARTIFACTS_BUCKET_NAME --s3-prefix $S3_ARTIFACTS_PATH
 ```
 
 ##### Parameters
 
-- `CWNamespace` - A namespace is a container for CloudWatch metrics.
-- `GlueServiceRole` - AWS Glue Role arn you created [earlier](#configuring-iam-permissions-for-aws-glue).
-- `Warehouse` - Required catalog property to determine the root path of the data warehouse on S3. This can be any path on your S3 bucket. Not critical for the solution.
+- `CLOUDWATCH_NAMESPACE` - A namespace is a container for CloudWatch metrics.
 
-
-#### 3. Configure EventBridge Trigger
+#### 2. Configure EventBridge Trigger
 
 In this section you will configure EventBridge Rule that will trigger Lambda function on every transaction commit to Apache Iceberg table.
 Default rule listens to `Glue Data Catalog Table State Change` event from all the tables in Glue Data Catalog catalog. Lambda code knows to skip non-iceberg tables.
@@ -168,7 +175,7 @@ events_client.put_targets(
 print(f"Pattern updated = {event_pattern_dump}")
 ```
 
-#### 4. (Optional) Create CloudWatch Dashboard
+#### 3. (Optional) Create CloudWatch Dashboard
 Once your Iceberg Table metrics are submitted to CloudWatch you can start using them to monitor and create alarms. CloudWatch also let you visualize metrics using CloudWatch Dashboards.
 
 `assets/cloudwatch-dashboard.template.json` is a sample CloudWatch dashboard configuration that uses fraction of the submitted metrics and combines it with AWS Glue native metrics for Apache Iceberg. 
@@ -234,6 +241,16 @@ sam local invoke IcebergMetricsLambda --env-vars .env.local.json
 
 `.env.local.json` - The JSON file that contains values for the Lambda function's environment variables. Lambda code is dependent on env vars that you are passing in the deploy section. You need to create the file it and include relevant [parameters](#parameters) before you calling `sam local invoke`.
 
+
+### Unit Tests
+
+You can test the metrics generation locally through unit-tests. From lambda folder - 
+
+```bash
+cd lambda
+docker build -f tests/Dockerfile -t iceberg-metrics-tests .
+docker run --rm iceberg-metrics-tests
+```
 
 ## Dependencies
 

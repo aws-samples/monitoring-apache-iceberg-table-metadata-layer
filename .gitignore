@@ -5,3 +5,7 @@ samconfig.toml
 .aws-sam
 .env.local.json
 events/my.event.json
+lambda/tests/.pytest_cache
+lambda/tests/test_db
+lambda/tests/__pycache__
+lambda/__pycache__

@@ -1,14 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Parameters: 
-  CWNamespace: 
-    Description: Amazon CloudWatch custom metric namespace
-    Type: String
-  GlueServiceRole: 
-    Description: AWS Glue Service Role with permissions to create session.
-    Type: String
-  Warehouse: 
-    Description: warehouse is a required catalog property to determine the root path of the data warehouse in storage.
+  ImageURL:
     Type: String
 Globals:
   Function:
@@ -18,29 +11,14 @@ Resources:
   IcebergMetricsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda/
-      Handler: app.lambda_handler
-      Runtime: python3.9
+      PackageType: Image
+      ImageUri: !Ref ImageURL
       Policies: 
         - CloudWatchPutMetricPolicy: {}
         - AWSLambdaBasicExecutionRole
         - AmazonS3ReadOnlyAccess
+        - AmazonEC2ContainerRegistryReadOnly
         - Statement:
-          - Sid: GlueInteractiveSessionPolicy
-            Effect: Allow
-            Action:
-            - glue:GetSession
-            - glue:CreateSession
-            - glue:GetStatement
-            - glue:RunStatement
-            - glue:GetSession
-            - glue:ListStatements
-            Resource: !Sub 'arn:aws:glue:*:${AWS::AccountId}:session/*'
-          - Sid: IAMPassRoleForGlueIS
-            Effect: Allow
-            Action:
-            - iam:PassRole
-            Resource: !Ref GlueServiceRole
           - Sid: GlueDataCatalogPolicy
             Effect: Allow
             Action:
@@ -54,13 +32,16 @@ Resources:
             - glue:GetPartitions
             - glue:ListSessions
             Resource: '*'
+        - Statement:
+          - Sid: ECRReadOnlyAdditionsPolicy
+            Effect: Allow
+            Action:
+            - ecr:DescribeRegistry
+            - ecr:InitiateLayerUpload
+            - ecr:SetRepositoryPolicy
+            Resource: '*'
       Architectures:
         - x86_64
-      Environment:
-        Variables:
-          CW_NAMESPACE: !Ref CWNamespace
-          GLUE_SERVICE_ROLE: !Ref GlueServiceRole
-          SPARK_CATALOG_S3_WAREHOUSE: !Ref Warehouse
   PermissionForEventBridgeToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
