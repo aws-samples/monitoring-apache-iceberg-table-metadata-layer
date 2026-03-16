@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'monitor-app'
+    static_configs:
+      - targets: ['monitor-app:8000']

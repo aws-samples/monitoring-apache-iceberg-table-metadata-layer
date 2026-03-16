@@ -1,0 +1,815 @@
+{
+    "__inputs": [
+        {
+            "name": "DS_PROMETHEUS",
+            "label": "Prometheus",
+            "description": "",
+            "type": "datasource",
+            "pluginId": "prometheus",
+            "pluginName": "Prometheus"
+        }
+    ],
+    "__requires": [
+        {
+            "type": "grafana",
+            "id": "grafana",
+            "name": "Grafana",
+            "version": "10.0.0"
+        }
+    ],
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "type": "stat",
+            "title": "Current Total Records",
+            "gridPos": {
+                "x": 0,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "id": 1,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "orientation": "auto",
+                "textMode": "value"
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_snapshot_total_records{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Current Total File Size",
+            "gridPos": {
+                "x": 6,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "id": 2,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "decbytes"
+                },
+                "overrides": []
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "orientation": "auto"
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_snapshot_total_file_size_bytes{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Current Data Files",
+            "gridPos": {
+                "x": 12,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "id": 3,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_snapshot_total_data_files{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Current Delete Files",
+            "gridPos": {
+                "x": 18,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "id": 4,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_snapshot_total_delete_files{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Snapshot Age (s)",
+            "gridPos": {
+                "x": 0,
+                "y": 4,
+                "w": 6,
+                "h": 4
+            },
+            "id": 5,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_table_snapshot_age_seconds{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Active Partitions",
+            "gridPos": {
+                "x": 6,
+                "y": 4,
+                "w": 6,
+                "h": 4
+            },
+            "id": 6,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_table_partition_count{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Compaction Candidate (0/1)",
+            "gridPos": {
+                "x": 12,
+                "y": 4,
+                "w": 6,
+                "h": 4
+            },
+            "id": 7,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "options": {
+                "colorMode": "value",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_table_compaction_candidate{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Time Since Last Rewrite (s)",
+            "gridPos": {
+                "x": 18,
+                "y": 4,
+                "w": 6,
+                "h": 4
+            },
+            "id": 8,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "targets": [
+                {
+                    "expr": "time() - iceberg_rewrite_last_timestamp_seconds{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Records Added/Removed (rate)",
+            "gridPos": {
+                "x": 0,
+                "y": 8,
+                "w": 12,
+                "h": 8
+            },
+            "id": 9,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "increase(iceberg_snapshot_added_records_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[5m])",
+                    "legendFormat": "added",
+                    "refId": "A"
+                },
+                {
+                    "expr": "increase(iceberg_snapshot_removed_records_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[5m])",
+                    "legendFormat": "removed",
+                    "refId": "B"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                }
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Bytes Added/Removed (rate)",
+            "gridPos": {
+                "x": 12,
+                "y": 8,
+                "w": 12,
+                "h": 8
+            },
+            "id": 10,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "increase(iceberg_snapshot_added_files_size_bytes_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[5m])",
+                    "legendFormat": "added bytes",
+                    "refId": "A"
+                },
+                {
+                    "expr": "increase(iceberg_snapshot_removed_files_size_bytes_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[5m])",
+                    "legendFormat": "removed bytes",
+                    "refId": "B"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "decbytes"
+                },
+                "overrides": []
+            },
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                }
+            }
+        },
+        {
+            "type": "bargauge",
+            "title": "Snapshot Commits by Operation (sum over range)",
+            "gridPos": {
+                "x": 0,
+                "y": 16,
+                "w": 11,
+                "h": 6
+            },
+            "id": 11,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "sum by (operation) (increase(iceberg_snapshot_commits_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[$__range]))",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Bytes Rewritten (compaction replacement)",
+            "gridPos": {
+                "x": 12,
+                "y": 16,
+                "w": 8,
+                "h": 6
+            },
+            "id": 12,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "increase(iceberg_rewrite_bytes_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[1h])",
+                    "legendFormat": "rewrite bytes",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "decbytes"
+                },
+                "overrides": []
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Files Rewritten (compaction replacement)",
+            "gridPos": {
+                "x": 20,
+                "y": 16,
+                "w": 4,
+                "h": 6
+            },
+            "id": 13,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "increase(iceberg_rewrite_data_files_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[1h])",
+                    "legendFormat": "rewrite files",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "File Size Stats (min/avg/max)",
+            "gridPos": {
+                "x": 0,
+                "y": 22,
+                "w": 12,
+                "h": 6
+            },
+            "id": 14,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_files_avg_size_bytes{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "legendFormat": "avg",
+                    "refId": "A"
+                },
+                {
+                    "expr": "iceberg_files_min_size_bytes{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "legendFormat": "min",
+                    "refId": "B"
+                },
+                {
+                    "expr": "iceberg_files_max_size_bytes{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "legendFormat": "max",
+                    "refId": "C"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "decbytes"
+                },
+                "overrides": []
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Records Per File (min/avg/max)",
+            "gridPos": {
+                "x": 12,
+                "y": 22,
+                "w": 12,
+                "h": 6
+            },
+            "id": 15,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_files_avg_record_count{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "legendFormat": "avg",
+                    "refId": "A"
+                },
+                {
+                    "expr": "iceberg_files_min_record_count{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "legendFormat": "min",
+                    "refId": "B"
+                },
+                {
+                    "expr": "iceberg_files_max_record_count{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "legendFormat": "max",
+                    "refId": "C"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Top 10 Partitions by Records",
+            "gridPos": {
+                "x": 0,
+                "y": 28,
+                "w": 12,
+                "h": 6
+            },
+            "id": 16,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "topk(10, iceberg_partition_record_count{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"})",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Top 10 Partitions by File Count",
+            "gridPos": {
+                "x": 12,
+                "y": 28,
+                "w": 12,
+                "h": 6
+            },
+            "id": 17,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "topk(10, iceberg_partition_file_count{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"})",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Small Files (<32MB)",
+            "gridPos": {
+                "x": 0,
+                "y": 34,
+                "w": 8,
+                "h": 4
+            },
+            "id": 18,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_files_small_file_count{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\",threshold_bytes=\"33554432\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Delete File Ratio",
+            "gridPos": {
+                "x": 8,
+                "y": 34,
+                "w": 8,
+                "h": 4
+            },
+            "id": 19,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_files_delete_file_ratio{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "stat",
+            "title": "Rewrite Events (count in range)",
+            "gridPos": {
+                "x": 16,
+                "y": 34,
+                "w": 8,
+                "h": 4
+            },
+            "id": 20,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "targets": [
+                {
+                    "expr": "increase(iceberg_rewrite_snapshots_total{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}[$__range])",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "table",
+            "title": "Partition Size Table",
+            "gridPos": {
+                "x": 0,
+                "y": 38,
+                "w": 24,
+                "h": 10
+            },
+            "id": 21,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+            },
+            "targets": [
+                {
+                    "expr": "iceberg_partition_size_bytes{catalog=~\"$catalog\",namespace=~\"$namespace\",table=~\"$table\"}",
+                    "refId": "A",
+                    "instant": true,
+                    "format": "table"
+                }
+            ],
+            "options": {
+                "showHeader": true
+            },
+            "transformations": [
+                {
+                    "id": "labelsToFields",
+                    "options": {
+                        "mode": "columns"
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true
+                        },
+                        "renameByName": {
+                            "Value": "size_bytes"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 36,
+    "style": "dark",
+    "tags": [
+        "iceberg",
+        "prometheus",
+        "rest-catalog"
+    ],
+    "templating": {
+        "list": [
+            {
+                "type": "query",
+                "name": "catalog",
+                "label": "Catalog",
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${DS_PROMETHEUS}"
+                },
+                "query": "label_values(iceberg_snapshot_total_records, catalog)",
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "allValue": ".*",
+                "sort": 1
+            },
+            {
+                "type": "query",
+                "name": "namespace",
+                "label": "Namespace",
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${DS_PROMETHEUS}"
+                },
+                "query": "label_values(iceberg_snapshot_total_records{catalog=~\"$catalog\"}, namespace)",
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "allValue": ".*",
+                "sort": 1
+            },
+            {
+                "type": "query",
+                "name": "table",
+                "label": "Table",
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${DS_PROMETHEUS}"
+                },
+                "query": "label_values(iceberg_snapshot_total_records{catalog=~\"$catalog\",namespace=~\"$namespace\"}, table)",
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "allValue": ".*",
+                "sort": 1
+            }
+        ]
+    },
+    "time": {
+        "from": "now-24h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Iceberg REST Catalog - Health & Layout",
+    "uid": "iceberg-rest-catalog-health",
+    "version": 1
+}

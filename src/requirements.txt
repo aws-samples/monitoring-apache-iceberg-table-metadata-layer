@@ -1,0 +1,5 @@
+pyiceberg[pyarrow,s3fs]>=0.6.0
+prometheus_client>=0.19.0
+pandas>=2.1.0
+requests>=2.31.0
+trino>=0.327.0

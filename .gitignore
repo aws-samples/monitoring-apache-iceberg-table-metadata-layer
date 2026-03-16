@@ -5,3 +5,10 @@ samconfig.toml
 .aws-sam
 .env.local.json
 events/my.event.json
+
+# Local Demo
+local-demo/venv/
+__pycache__/
+*.pyc
+
+./

@@ -1,0 +1,348 @@
+{
+  "title": "Iceberg Table Metrics - Comprehensive",
+  "uid": "iceberg_metrics_full",
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Table Metrics",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Data Files vs Delete Files",
+      "targets": [
+        {
+          "expr": "iceberg_snapshot_total_data_files",
+          "legendFormat": "Data Files",
+          "refId": "A"
+        },
+        {
+          "expr": "iceberg_snapshot_total_delete_files",
+          "legendFormat": "Delete Files",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Total Records",
+      "targets": [
+        {
+          "expr": "iceberg_snapshot_total_records",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Added Records",
+      "targets": [
+        {
+          "expr": "iceberg_snapshot_added_records",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Added Data Files",
+      "targets": [
+        {
+          "expr": "iceberg_snapshot_added_data_files",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Changed Partition Count",
+      "targets": [
+        {
+          "expr": "iceberg_snapshot_changed_partition_count",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 9
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Maintenance: Files Compacted",
+      "targets": [
+        {
+          "expr": "iceberg_maintenance_compacted_data_files",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 9
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Maintenance: Bytes Compacted",
+      "targets": [
+        {
+          "expr": "iceberg_maintenance_compacted_files_size",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 9
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Partitions Metrics",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Partition Record Distribution (Min / Max / Avg)",
+      "targets": [
+        {
+          "expr": "iceberg_partitions_min_record_count",
+          "legendFormat": "Min",
+          "refId": "A"
+        },
+        {
+          "expr": "iceberg_partitions_max_record_count",
+          "legendFormat": "Max",
+          "refId": "B"
+        },
+        {
+          "expr": "iceberg_partitions_avg_record_count",
+          "legendFormat": "Avg",
+          "refId": "C"
+        }
+      ],
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Partition File Distribution (Min / Max / Avg)",
+      "targets": [
+        {
+          "expr": "iceberg_partitions_min_file_count",
+          "legendFormat": "Min",
+          "refId": "A"
+        },
+        {
+          "expr": "iceberg_partitions_max_file_count",
+          "legendFormat": "Max",
+          "refId": "B"
+        },
+        {
+          "expr": "iceberg_partitions_avg_file_count",
+          "legendFormat": "Avg",
+          "refId": "C"
+        }
+      ],
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "Top 10 Largest Partitions (Records)",
+      "targets": [
+        {
+          "expr": "topk(10, iceberg_partition_record_count)",
+          "legendFormat": "{{partition_name}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "Record Count by Partition",
+      "targets": [
+        {
+          "expr": "iceberg_partition_record_count",
+          "legendFormat": "{{partition_name}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Files Metrics",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      }
+    },
+    {
+      "type": "stat",
+      "title": "File Record Counts (Min / Max / Avg)",
+      "targets": [
+        {
+          "expr": "iceberg_files_min_record_count",
+          "legendFormat": "Min",
+          "refId": "A"
+        },
+        {
+          "expr": "iceberg_files_max_record_count",
+          "legendFormat": "Max",
+          "refId": "B"
+        },
+        {
+          "expr": "iceberg_files_avg_record_count",
+          "legendFormat": "Avg",
+          "refId": "C"
+        }
+      ],
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "File Sizes (Min / Max / Avg)",
+      "targets": [
+        {
+          "expr": "iceberg_files_min_file_size",
+          "legendFormat": "Min",
+          "refId": "A"
+        },
+        {
+          "expr": "iceberg_files_max_file_size",
+          "legendFormat": "Max",
+          "refId": "B"
+        },
+        {
+          "expr": "iceberg_files_avg_file_size",
+          "legendFormat": "Avg",
+          "refId": "C"
+        }
+      ],
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "datasource": {
+        "uid": "Prometheus"
+      }
+    }
+  ]
+}

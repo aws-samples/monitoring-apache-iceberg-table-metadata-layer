@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio:RELEASE.2023-11-20T22-40-07Z
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: ["server", "/data", "--console-address", ":9001"]
+
+  mc:
+    image: minio/mc:RELEASE.2023-11-20T16-30-59Z
+    container_name: mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minio minio123;
+      /usr/bin/mc mb myminio/iceberg-catalog;
+      /usr/bin/mc policy set public myminio/iceberg-catalog;
+      exit 0;
+      "
+
+  postgres-iceberg:
+    hostname: postgres-iceberg
+    ports:
+      - 5433:5432
+    image: postgres:16
+    container_name: postgres-iceberg
+    environment:
+      POSTGRES_USER: iceberg
+      POSTGRES_PASSWORD: iceberg
+      POSTGRES_DB: iceberg
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "iceberg", "-d", "iceberg"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+
+  iceberg-rest-catalog:
+    container_name: iceberg_rest_catalog
+    hostname: iceberg-rest-catalog
+    image: magnivmirer/iceberg-hdfs-rest-adapter:1.0.0
+    ports:
+      - 8181:8181
+    environment:
+      CATALOG_CATALOG__IMPL: org.apache.iceberg.jdbc.JdbcCatalog
+      CATALOG_JDBC_USER: iceberg
+      CATALOG_JDBC_PASSWORD: iceberg
+      CATALOG_URI: jdbc:postgresql://postgres-iceberg:5432/iceberg
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://minio:9000 
+      CATALOG_WAREHOUSE: s3://iceberg-catalog/
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+    depends_on:
+      postgres-iceberg:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  trino:
+    image: trinodb/trino:435
+    container_name: trino
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./trino/iceberg.properties:/etc/trino/catalog/iceberg.properties
+    depends_on:
+      - iceberg-rest-catalog
+      - minio
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  monitor-app:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    container_name: monitor-app
+    environment:
+      - CATALOG_URI=http://iceberg-rest-catalog:8181/
+      - S3_ENDPOINT=http://minio:9000
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=minio123
+      - AWS_REGION=us-east-1
+      - POLL_INTERVAL=30
+    ports:
+      - "8000:8000"
+    depends_on:
+      - iceberg-rest-catalog

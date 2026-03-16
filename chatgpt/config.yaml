@@ -1,0 +1,36 @@
+host: 0.0.0.0
+port: 9109
+scrape_interval_seconds: 30
+deep_scan_interval_seconds: 600
+request_timeout_seconds: 30
+max_partitions_per_table: 5000
+
+catalogs:
+  - name: prod
+    uri: https://your-iceberg-rest-catalog.example.com
+    warehouse: s3://warehouse
+    token: ${ICEBERG_TOKEN}
+
+# Choose one mode
+# 1) explicit tables (recommended to start)
+discovery:
+  mode: explicit
+  tables:
+    - namespace: demo
+      table: events
+    - namespace: sales
+      table: orders
+
+# 2) namespace scan
+# discovery:
+#   mode: namespace_scan
+#   namespaces:
+#     - demo
+#     - sales
+
+thresholds:
+  small_file_bytes: 33554432      # 32MB
+  target_file_bytes: 134217728    # 128MB
+  delete_file_ratio: 0.2
+  avg_files_per_partition: 20
+  small_file_count: 100

@@ -1,0 +1,11 @@
+.git
+.venv
+src/.venv
+src/venv
+__pycache__
+*.pyc
+.vscode
+.DS_Store
+*.md
+local-demo/prometheus/data
+local-demo/grafana/data
